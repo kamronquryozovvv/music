@@ -4,57 +4,109 @@
   <title>Mini Craft</title>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { background:#87CEEB; display:flex; flex-direction:column; align-items:center; }
-    h1 { color:#333; padding:10px; font-family:Arial; }
+    body { background:#87CEEB; display:flex; flex-direction:column; align-items:center; font-family:Arial; }
+    h1 { color:#333; padding:10px; }
     #canvas { border:2px solid #333; cursor:crosshair; }
     #inventar { display:flex; gap:5px; padding:10px; }
-    .blok { width:50px; height:50px; border:3px solid #333; cursor:pointer; }
-    .blok.tanlangan { border:3px solid yellow; }
-    #info { font-family:Arial; font-size:14px; padding:5px; color:#333; }
+    .blok { width:45px; height:45px; border:3px solid #333; cursor:pointer; border-radius:5px; }
+    .blok.tanlangan { border:3px solid yellow; transform:scale(1.1); }
+    #info { font-size:13px; padding:5px; color:#333; }
   </style>
 </head>
 <body>
   <h1>Mini Craft</h1>
-  <div id="info">Chap klik: blok qo'y | O'ng klik: blok o'chir</div>
+  <div id="info">Chap klik: qo'y | O'ng klik: o'chir | Blok tanlang:</div>
   <div id="inventar">
-    <div class="blok tanlangan" style="background:#8B4513;" onclick="blokTanla(0, this)" title="Tuproq"></div>
-    <div class="blok" style="background:#808080;" onclick="blokTanla(1, this)" title="Tosh"></div>
-    <div class="blok" style="background:#228B22;" onclick="blokTanla(2, this)" title="O't"></div>
-    <div class="blok" style="background:#FFD700;" onclick="blokTanla(3, this)" title="Qum"></div>
-    <div class="blok" style="background:#6495ED;" onclick="blokTanla(4, this)" title="Suv"></div>
-    <div class="blok" style="background:#8B0000;" onclick="blokTanla(5, this)" title="G'isht"></div>
+    <div class="blok tanlangan" style="background:#8B4513;" onclick="blokTanla(0,this)" title="Tuproq"></div>
+    <div class="blok" style="background:#808080;" onclick="blokTanla(1,this)" title="Tosh"></div>
+    <div class="blok" style="background:#228B22;" onclick="blokTanla(2,this)" title="O't"></div>
+    <div class="blok" style="background:#FFD700;" onclick="blokTanla(3,this)" title="Qum"></div>
+    <div class="blok" style="background:#6495ED;" onclick="blokTanla(4,this)" title="Suv"></div>
+    <div class="blok" style="background:#8B0000;" onclick="blokTanla(5,this)" title="G'isht"></div>
+    <div class="blok" style="background:#556B2F;" onclick="blokTanla(6,this)" title="Daraxt"></div>
+    <div class="blok" style="background:#90EE90;" onclick="blokTanla(7,this)" title="Barg"></div>
   </div>
   <canvas id="canvas" width="800" height="500"></canvas>
 
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    const BLOK = 40;
-    const KOLS = canvas.width / BLOK;
-    const QATORLAR = canvas.height / BLOK;
+    const B = 40;
+    const KOLS = canvas.width / B;
+    const ROWS = canvas.height / B;
 
-    const ranglar = ['#8B4513','#808080','#228B22','#FFD700','#6495ED','#8B0000'];
-    const nomlar = ['Tuproq','Tosh','O\'t','Qum','Suv','G\'isht'];
+    const ranglar = ['#8B4513','#808080','#228B22','#FFD700','#6495ED','#8B0000','#556B2F','#90EE90'];
     let tanlangan = 0;
 
+    // Noise funksiyasi
+    function noise(x) {
+      return Math.sin(x * 0.3) * 2 + Math.sin(x * 0.7) * 1.5 + Math.sin(x * 1.3) * 1;
+    }
+
+    // Dunyo generatsiya
     let dunyo = [];
-    for(let y = 0; y < QATORLAR; y++){
+    for(let y = 0; y < ROWS; y++){
       dunyo[y] = [];
       for(let x = 0; x < KOLS; x++){
-        if(y > QATORLAR - 4) dunyo[y][x] = 0;
-        else dunyo[y][x] = -1;
+        dunyo[y][x] = -1;
+      }
+    }
+
+    // Yer yuzasi generatsiya
+    let heights = [];
+    for(let x = 0; x < KOLS; x++){
+      heights[x] = Math.round(ROWS * 0.55 + noise(x));
+    }
+
+    for(let x = 0; x < KOLS; x++){
+      let h = heights[x];
+      // Suv
+      if(h > ROWS * 0.6) h = Math.round(ROWS * 0.6);
+      
+      for(let y = h; y < ROWS; y++){
+        if(y === h){
+          // Suv joyi
+          if(heights[x] > ROWS * 0.58){
+            dunyo[y][x] = 4; // Suv
+          } else {
+            dunyo[y][x] = 2; // O't
+          }
+        } else if(y < h + 3){
+          dunyo[y][x] = 0; // Tuproq
+        } else {
+          dunyo[y][x] = 1; // Tosh
+        }
+      }
+
+      // Qum qirg'oq
+      if(heights[x] >= Math.round(ROWS * 0.57) && heights[x] <= Math.round(ROWS * 0.6)){
+        dunyo[h][x] = 3; // Qum
+      }
+
+      // Daraxtlar
+      if(heights[x] < ROWS * 0.57 && Math.random() < 0.15){
+        let ty = h - 1;
+        if(ty >= 0) dunyo[ty][x] = 6;
+        if(ty-1 >= 0) dunyo[ty-1][x] = 6;
+        if(ty-2 >= 0) dunyo[ty-2][x] = 7;
+        if(ty-3 >= 0) dunyo[ty-3][x] = 7;
+        if(ty-2 >= 0 && x+1 < KOLS) dunyo[ty-2][x+1] = 7;
+        if(ty-2 >= 0 && x-1 >= 0) dunyo[ty-2][x-1] = 7;
       }
     }
 
     function chiz(){
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      for(let y = 0; y < QATORLAR; y++){
+      // Osmon
+      ctx.fillStyle = '#87CEEB';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for(let y = 0; y < ROWS; y++){
         for(let x = 0; x < KOLS; x++){
           if(dunyo[y][x] >= 0){
             ctx.fillStyle = ranglar[dunyo[y][x]];
-            ctx.fillRect(x*BLOK, y*BLOK, BLOK, BLOK);
-            ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-            ctx.strokeRect(x*BLOK, y*BLOK, BLOK, BLOK);
+            ctx.fillRect(x*B, y*B, B, B);
+            ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+            ctx.strokeRect(x*B, y*B, B, B);
           }
         }
       }
@@ -66,21 +118,26 @@
       el.classList.add('tanlangan');
     }
 
-    canvas.addEventListener('click', function(e){
+    canvas.
+      addEventListener('click', function(e){
       const rect = canvas.getBoundingClientRect();
-      const x = Math.floor((e.clientX - rect.left) / BLOK);
-      const y = Math.floor((e.clientY - rect.top) / BLOK);
-      dunyo[y][x] = tanlangan;
-      chiz();
+      const x = Math.floor((e.clientX - rect.left) / B);
+      const y = Math.floor((e.clientY - rect.top) / B);
+      if(x >= 0 && x < KOLS && y >= 0 && y < ROWS){
+        dunyo[y][x] = tanlangan;
+        chiz();
+      }
     });
 
     canvas.addEventListener('contextmenu', function(e){
       e.preventDefault();
       const rect = canvas.getBoundingClientRect();
-      const x = Math.floor((e.clientX - rect.left) / BLOK);
-      const y = Math.floor((e.clientY - rect.top) / BLOK);
-      dunyo[y][x] = -1;
-      chiz();
+      const x = Math.floor((e.clientX - rect.left) / B);
+      const y = Math.floor((e.clientY - rect.top) / B);
+      if(x >= 0 && x < KOLS && y >= 0 && y < ROWS){
+        dunyo[y][x] = -1;
+        chiz();
+      }
     });
 
     chiz();

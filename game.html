@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mini Craft</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:#87CEEB; display:flex; flex-direction:column; align-items:center; }
+    h1 { color:#333; padding:10px; font-family:Arial; }
+    #canvas { border:2px solid #333; cursor:crosshair; }
+    #inventar { display:flex; gap:5px; padding:10px; }
+    .blok { width:50px; height:50px; border:3px solid #333; cursor:pointer; }
+    .blok.tanlangan { border:3px solid yellow; }
+    #info { font-family:Arial; font-size:14px; padding:5px; color:#333; }
+  </style>
+</head>
+<body>
+  <h1>Mini Craft</h1>
+  <div id="info">Chap klik: blok qo'y | O'ng klik: blok o'chir</div>
+  <div id="inventar">
+    <div class="blok tanlangan" style="background:#8B4513;" onclick="blokTanla(0, this)" title="Tuproq"></div>
+    <div class="blok" style="background:#808080;" onclick="blokTanla(1, this)" title="Tosh"></div>
+    <div class="blok" style="background:#228B22;" onclick="blokTanla(2, this)" title="O't"></div>
+    <div class="blok" style="background:#FFD700;" onclick="blokTanla(3, this)" title="Qum"></div>
+    <div class="blok" style="background:#6495ED;" onclick="blokTanla(4, this)" title="Suv"></div>
+    <div class="blok" style="background:#8B0000;" onclick="blokTanla(5, this)" title="G'isht"></div>
+  </div>
+  <canvas id="canvas" width="800" height="500"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const BLOK = 40;
+    const KOLS = canvas.width / BLOK;
+    const QATORLAR = canvas.height / BLOK;
+
+    const ranglar = ['#8B4513','#808080','#228B22','#FFD700','#6495ED','#8B0000'];
+    const nomlar = ['Tuproq','Tosh','O\'t','Qum','Suv','G\'isht'];
+    let tanlangan = 0;
+
+    let dunyo = [];
+    for(let y = 0; y < QATORLAR; y++){
+      dunyo[y] = [];
+      for(let x = 0; x < KOLS; x++){
+        if(y > QATORLAR - 4) dunyo[y][x] = 0;
+        else dunyo[y][x] = -1;
+      }
+    }
+
+    function chiz(){
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for(let y = 0; y < QATORLAR; y++){
+        for(let x = 0; x < KOLS; x++){
+          if(dunyo[y][x] >= 0){
+            ctx.fillStyle = ranglar[dunyo[y][x]];
+            ctx.fillRect(x*BLOK, y*BLOK, BLOK, BLOK);
+            ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+            ctx.strokeRect(x*BLOK, y*BLOK, BLOK, BLOK);
+          }
+        }
+      }
+    }
+
+    function blokTanla(i, el){
+      tanlangan = i;
+      document.querySelectorAll('.blok').forEach(b => b.classList.remove('tanlangan'));
+      el.classList.add('tanlangan');
+    }
+
+    canvas.addEventListener('click', function(e){
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / BLOK);
+      const y = Math.floor((e.clientY - rect.top) / BLOK);
+      dunyo[y][x] = tanlangan;
+      chiz();
+    });
+
+    canvas.addEventListener('contextmenu', function(e){
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / BLOK);
+      const y = Math.floor((e.clientY - rect.top) / BLOK);
+      dunyo[y][x] = -1;
+      chiz();
+    });
+
+    chiz();
+  </script>
+</body>
+</html>
